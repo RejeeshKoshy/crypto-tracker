@@ -2,25 +2,7 @@
 
 > A real-time cryptocurrency tracking dashboard with watchlists, live price feeds, sparkline charts, and a detailed asset modal — built as a zero-dependency single-page app.
 
-**[→ Live Demo](https://your-username.github.io/market-pulse)**
-
----
-
-## Screenshot
-
-```
-┌─────────────────────────────────────────────────────┐
-│  ● Market Pulse     [Search…] [All|Watchlist] [↺] [🌙] │
-├─────────────────────────────────────────────────────┤
-│  ● LIVE DATA        Updated: 02:34:11 PM   20 assets │
-├────┬──────────────┬────────┬───────┬─────────┬──┬──┤
-│  # │ Asset        │ Price  │  24h% │ Mkt Cap │7D│ ★ │
-├────┼──────────────┼────────┼───────┼─────────┼──┼──┤
-│  1 │ ₿ Bitcoin    │$67,420 │ +2.4% │ $1.32T  │↗ │ ★ │
-│  2 │ Ξ Ethereum   │ $3,510 │ -0.8% │ $421B   │↘ │   │
-│ …  │ …            │   …    │   …   │   …     │… │ … │
-└────┴──────────────┴────────┴───────┴─────────┴──┴──┘
-```
+**[→ Live Demo](https://69bc335d8c45792fca96e0ff--eloquent-lamington-7253e9.netlify.app/)**
 
 ---
 
