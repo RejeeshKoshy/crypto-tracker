@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Market Pulse — Live Crypto Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+/* ─────────────────────────────────────────
+   DESIGN TOKENS
+───────────────────────────────────────── */
+:root {
+  --bg:       #0a0a0f;
+  --surface:  #111118;
+  --surface2: #18181f;
+  --border:   #2a2a38;
+  --accent:   #00ff88;
+  --accent2:  #00c4ff;
+  --danger:   #ff4466;
+  --text:     #e8e8f0;
+  --muted:    #6b6b80;
+  --gold:     #ffcc44;
+  --radius:   12px;
+  --mono:     'Space Mono', monospace;
+  --sans:     'Syne', sans-serif;
+}
+body.light {
+  --bg:       #f0f0f5;
+  --surface:  #ffffff;
+  --surface2: #e8e8f0;
+  --border:   #d0d0dc;
+  --text:     #0a0a1a;
+  --muted:    #606070;
+}
+
+/* ─────────────────────────────────────────
+   RESET & BASE
+───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ─────────────────────────────────────────
+   HEADER
+───────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 18px 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.5px;
+}
+.logo__dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%     { opacity:.5; transform:scale(1.3); }
+}
+.header__controls { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* ─────────────────────────────────────────
+   SEARCH
+───────────────────────────────────────── */
+.search { position: relative; }
+.search__icon {
+  position: absolute;
+  left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+.search__input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  padding: 9px 14px 9px 34px;
+  width: 220px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search__input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,255,136,.12);
+}
+
+/* ─────────────────────────────────────────
+   BUTTON
+───────────────────────────────────────── */
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn:hover        { border-color: var(--accent); color: var(--accent); }
+.btn--icon        { padding: 8px 12px; font-size: 1rem; }
+.btn--spin svg    { animation: spin 1s linear infinite; }
+@keyframes spin   { to { transform: rotate(360deg); } }
+
+/* ─────────────────────────────────────────
+   TABS
+───────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface2);
+  border-radius: 10px;
+}
+.tab {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.tab[aria-selected="true"] { background: var(--accent); color: #000; font-weight: 700; }
+
+/* ─────────────────────────────────────────
+   MAIN / LAYOUT
+───────────────────────────────────────── */
+.main { max-width: 1400px; margin: 0 auto; padding: 28px 20px; }
+
+/* ─────────────────────────────────────────
+   STATUS BAR
+───────────────────────────────────────── */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.status-bar__live { display:flex; align-items:center; gap:6px; color:var(--accent); font-weight:700; }
+.blink {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: blink 1.2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ─────────────────────────────────────────
+   ERROR BANNER
+───────────────────────────────────────── */
+.error-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  background: rgba(255,68,102,.1);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  color: var(--danger);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.error-banner--visible { display: flex; }
+
+/* ─────────────────────────────────────────
+   ASSET TABLE
+───────────────────────────────────────── */
+.table-header,
+.asset-row {
+  display: grid;
+  grid-template-columns: 36px 2fr 1.2fr 1fr 1.2fr 80px 40px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+}
+.table-header {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.asset-grid { display: grid; gap: 10px; }
+.asset-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color .18s, transform .18s, box-shadow .18s;
+  animation: fadeUp 0.3s ease both;
+}
+.asset-row:hover {
+  border-color: var(--accent2);
+  transform: translateX(3px);
+  box-shadow: 0 4px 20px rgba(0,196,255,.08);
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+/* Asset cells */
+.cell--rank   { font-family:var(--mono); font-size:.75rem; color:var(--muted); text-align:center; }
+.asset-info   { display:flex; align-items:center; gap:12px; min-width:0; }
+.coin-icon    { width:36px; height:36px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+.coin-icon--fallback {
+  width:36px; height:36px; border-radius:50%;
+  background:var(--surface2); display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:.8rem; color:var(--accent); flex-shrink:0;
+}
+.asset-name   { font-weight:700; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.asset-symbol { font-family:var(--mono); font-size:.72rem; color:var(--muted); text-transform:uppercase; }
+.cell--price  { font-family:var(--mono); font-weight:700; font-size:.95rem; }
+.cell--change { font-family:var(--mono); font-size:.82rem; font-weight:700; text-align:right; }
+.cell--mcap   { font-family:var(--mono); font-size:.78rem; color:var(--muted); }
+.cell--spark  { width:80px; height:32px; }
+
+.text--pos { color: var(--accent); }
+.text--neg { color: var(--danger); }
+
+/* ─────────────────────────────────────────
+   STAR BUTTON
+───────────────────────────────────────── */
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--gold);
+  opacity: .35;
+  transition: opacity .2s, transform .2s;
+}
+.star-btn:hover,
+.star-btn[aria-pressed="true"] { opacity:1; transform:scale(1.2); }
+
+/* ─────────────────────────────────────────
+   SKELETON
+───────────────────────────────────────── */
+.skeleton-row {
+  display:flex; gap:14px; align-items:center;
+  padding:14px 18px;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+}
+.skeleton {
+  border-radius:6px;
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+  background-size:200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { to{background-position:-200% 0} }
+
+/* ─────────────────────────────────────────
+   EMPTY STATE
+───────────────────────────────────────── */
+.empty { padding:60px 20px; text-align:center; color:var(--muted); font-family:var(--mono); }
+.empty__icon { font-size:3rem; margin-bottom:12px; }
+
+/* ─────────────────────────────────────────
+   MODAL
+───────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset:0;
+  background: rgba(0,0,0,.7);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeUp .2s;
+}
+.modal-overlay--open { display:flex; }
+.modal {
+  position:relative;
+  width:100%; max-width:520px; max-height:90vh;
+  overflow-y:auto; padding:28px;
+  background:var(--surface); border:1px solid var(--border); border-radius:16px;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+.modal__close {
+  position:absolute; top:16px; right:16px;
+  display:flex; align-items:center; justify-content:center;
+  width:32px; height:32px;
+  background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+  color:var(--text); font-size:1rem; cursor:pointer;
+  transition:border-color .2s, color .2s;
+}
+.modal__close:hover { border-color:var(--danger); color:var(--danger); }
+.modal__header   { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+.modal__coin-icon{ width:52px; height:52px; border-radius:50%; object-fit:cover; }
+.modal__name     { font-size:1.4rem; font-weight:800; }
+.modal__symbol   { font-family:var(--mono); font-size:.85rem; color:var(--muted); }
+.modal__price    { font-family:var(--mono); font-size:2rem; font-weight:700; margin-bottom:6px; }
+.stat-grid       { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:20px; }
+.stat-box        { padding:14px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; }
+.stat-box__label { font-family:var(--mono); font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.stat-box__value { font-family:var(--mono); font-weight:700; font-size:1rem; }
+.range-bar       { margin-top:20px; }
+.range-bar__labels { display:flex; justify-content:space-between; font-family:var(--mono); font-size:.72rem; color:var(--muted); margin-bottom:6px; }
+.range-bar__track  { height:6px; border-radius:99px; background:var(--surface2); overflow:hidden; }
+.range-bar__fill   { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--danger),var(--accent)); transition:width .5s ease; }
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+@media (max-width:700px) {
+  .table-header, .asset-row { grid-template-columns:2fr 1fr .8fr 40px; }
+  .cell--rank, .cell--mcap, .cell--spark { display:none; }
+  .header { padding:14px 16px; }
+  .search__input { width:160px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header" role="banner">
+  <div class="logo">
+    <div class="logo__dot" aria-hidden="true"></div>
+    Market Pulse
+  </div>
+  <div class="header__controls">
+    <div class="search" role="search">
+      <span class="search__icon" aria-hidden="true">⌕</span>
+      <input id="searchInput" class="search__input" type="search"
+             placeholder="Search assets…" aria-label="Search assets" autocomplete="off"/>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Asset view">
+      <button class="tab" role="tab" data-tab="all"       aria-selected="true">All</button>
+      <button class="tab" role="tab" data-tab="watchlist" aria-selected="false">★ Watchlist</button>
+    </div>
+    <button id="refreshBtn" class="btn" aria-label="Refresh data">
+      <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Refresh
+    </button>
+    <button id="themeBtn" class="btn btn--icon" aria-label="Toggle theme">🌙</button>
+  </div>
+</header>
+
+<main class="main" role="main">
+  <div class="status-bar" role="status" aria-live="polite">
+    <div class="status-bar__live">
+      <div class="blink" aria-hidden="true"></div>LIVE DATA
+    </div>
+    <span id="lastUpdated">Fetching data…</span>
+    <span id="totalAssets">— assets tracked</span>
+  </div>
+
+  <div id="errorBanner" class="error-banner" role="alert" aria-live="assertive">
+    ⚠ <span id="errorMsg"></span>
+  </div>
+
+  <div class="table-header" aria-hidden="true">
+    <span>#</span><span>Asset</span><span>Price</span>
+    <span>24h %</span><span>Market Cap</span><span>7D</span><span></span>
+  </div>
+
+  <div id="assetGrid" class="asset-grid" role="list"></div>
+</main>
+
+<div id="modalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <button id="modalClose" class="modal__close" aria-label="Close">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════
+   1. CONSTANTS
+═══════════════════════════════════════════ */
+const CONFIG = Object.freeze({
+  AUTO_REFRESH_MS : 60_000,
+  SEARCH_DEBOUNCE : 200,
+  LS_WATCHLIST    : 'mp_watchlist',
+  LS_THEME        : 'mp_theme',
+});
+
+/* ═══════════════════════════════════════════
+   2. API SERVICE
+   All network calls are encapsulated here.
+   Swap the implementation without touching anything else.
+═══════════════════════════════════════════ */
+const CoinGeckoService = (() => {
+  const BASE = 'https://api.coingecko.com/api/v3';
+
+  async function request(path) {
+    const res = await fetch(BASE + path);
+    if (!res.ok) {
+      const msg = res.status === 429
+        ? 'Rate limit reached. Please wait a moment before refreshing.'
+        : `API error ${res.status}. Please try again.`;
+      throw new Error(msg);
+    }
+    return res.json();
+  }
+
+  return {
+    fetchTopCoins: () => request(
+      '/coins/markets?vs_currency=usd&order=market_cap_desc' +
+      '&per_page=20&page=1&sparkline=true&price_change_percentage=24h'
+    ),
+  };
+})();
+
+/* ═══════════════════════════════════════════
+   3. FORMATTER
+   Pure, stateless formatting utilities.
+═══════════════════════════════════════════ */
+const Fmt = (() => {
+  function compact(n) {
+    if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+    if (n >= 1e9)  return '$' + (n / 1e9 ).toFixed(2) + 'B';
+    if (n >= 1e6)  return '$' + (n / 1e6 ).toFixed(2) + 'M';
+    return '$' + n.toLocaleString();
+  }
+
+  return {
+    price  : (n) => n >= 1
+      ? n.toLocaleString('en-US', { style:'currency', currency:'USD', minimumFractionDigits:2 })
+      : '$' + n.toFixed(6),
+    compact,
+    pct    : (n) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%',
+    time   : (d) => d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
+  };
+})();
+
+/* ═══════════════════════════════════════════
+   4. STORAGE
+   Thin wrappers around localStorage.
+═══════════════════════════════════════════ */
+const Storage = {
+  getJSON  : (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
+  setJSON  : (key, val)      => localStorage.setItem(key, JSON.stringify(val)),
+  getString: (key, fallback) => localStorage.getItem(key) ?? fallback,
+  setString: (key, val)      => localStorage.setItem(key, val),
+};
+
+/* ═══════════════════════════════════════════
+   5. STATE
+   Single source of truth. Never mutate directly
+   outside of the data layer (section 10).
+═══════════════════════════════════════════ */
+const state = {
+  coins      : [],
+  watchlist  : new Set(Storage.getJSON(CONFIG.LS_WATCHLIST, [])),
+  search     : '',
+  tab        : 'all',
+  loading    : false,
+  error      : null,
+  lastUpdated: null,
+  darkMode   : Storage.getString(CONFIG.LS_THEME, 'dark') !== 'light',
+};
+
+/* ═══════════════════════════════════════════
+   6. DOM REFERENCES  — cached once at startup
+═══════════════════════════════════════════ */
+const el = (id) => document.getElementById(id);
+const DOM = {
+  assetGrid   : el('assetGrid'),
+  errorBanner : el('errorBanner'),
+  errorMsg    : el('errorMsg'),
+  lastUpdated : el('lastUpdated'),
+  totalAssets : el('totalAssets'),
+  searchInput : el('searchInput'),
+  refreshBtn  : el('refreshBtn'),
+  themeBtn    : el('themeBtn'),
+  modalOverlay: el('modalOverlay'),
+  modalContent: el('modalContent'),
+  modalClose  : el('modalClose'),
+  tabs        : document.querySelectorAll('[role="tab"]'),
+};
+
+/* ═══════════════════════════════════════════
+   7. PURE RENDERERS
+   HTML-string factories. Receive data, return
+   strings. No DOM access, no side-effects.
+═══════════════════════════════════════════ */
+const Render = (() => {
+
+  function sparkline(prices, isUp) {
+    if (!prices?.length) return `<svg class="cell--spark"></svg>`;
+    const W = 80, H = 32, pts = prices.slice(-20);
+    const min   = Math.min(...pts);
+    const range = Math.max(...pts) - min || 1;
+    const points = pts.map((p, i) =>
+      `${(i / (pts.length - 1)) * W},${H - ((p - min) / range) * (H - 4) - 2}`
+    ).join(' ');
+    return `<svg class="cell--spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="${points}" fill="none" stroke="${isUp ? '#00ff88' : '#ff4466'}" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>`;
+  }
+
+  function coinRow(coin, rank, watchlist) {
+    const isPos     = (coin.price_change_percentage_24h ?? 0) >= 0;
+    const isStarred = watchlist.has(coin.id);
+    return `
+      <div class="asset-row" role="listitem" data-id="${coin.id}"
+           tabindex="0" style="animation-delay:${rank * 40}ms"
+           aria-label="${coin.name}, ${Fmt.price(coin.current_price)}">
+        <div class="cell--rank">${rank + 1}</div>
+        <div class="asset-info">
+          <img class="coin-icon" src="${coin.image}" alt="" loading="lazy"
+               onerror="this.hidden=true;this.nextElementSibling.hidden=false"/>
+          <div class="coin-icon--fallback" hidden aria-hidden="true">${coin.symbol.slice(0,3).toUpperCase()}</div>
+          <div>
+            <div class="asset-name">${coin.name}</div>
+            <div class="asset-symbol">${coin.symbol}</div>
+          </div>
+        </div>
+        <div class="cell--price">${Fmt.price(coin.current_price)}</div>
+        <div class="cell--change ${isPos ? 'text--pos' : 'text--neg'}">${Fmt.pct(coin.price_change_percentage_24h ?? 0)}</div>
+        <div class="cell--mcap">${Fmt.compact(coin.market_cap)}</div>
+        ${sparkline(coin.sparkline_in_7d?.price, isPos)}
+        <button class="star-btn" data-star="${coin.id}"
+                aria-label="${isStarred ? 'Remove from' : 'Add to'} watchlist"
+                aria-pressed="${isStarred}">★</button>
+      </div>`;
+  }
+
+  function statBox(label, value, cls = '') {
+    return `<div class="stat-box">
+      <div class="stat-box__label">${label}</div>
+      <div class="stat-box__value ${cls}">${value}</div>
+    </div>`;
+  }
+
+  function coinModal(coin) {
+    const isPos   = (coin.price_change_percentage_24h ?? 0) >= 0;
+    const range   = (coin.high_24h - coin.low_24h) || 1;
+    const fillPct = Math.max(2, Math.min(100, ((coin.current_price - coin.low_24h) / range) * 100));
+    return `
+      <div class="modal__header">
+        <img class="modal__coin-icon" src="${coin.image}" alt="${coin.name} logo"/>
+        <div>
+          <div class="modal__name" id="modalTitle">${coin.name}</div>
+          <div class="modal__symbol">${coin.symbol.toUpperCase()} · Rank #${coin.market_cap_rank}</div>
+        </div>
+      </div>
+      <div class="modal__price">${Fmt.price(coin.current_price)}</div>
+      <div class="${isPos ? 'text--pos' : 'text--neg'}" style="font-family:var(--mono);font-size:1rem">
+        ${Fmt.pct(coin.price_change_percentage_24h ?? 0)} today
+      </div>
+      <div class="range-bar">
+        <div class="range-bar__labels">
+          <span>Low: ${Fmt.price(coin.low_24h)}</span>
+          <span>24h Range</span>
+          <span>High: ${Fmt.price(coin.high_24h)}</span>
+        </div>
+        <div class="range-bar__track">
+          <div class="range-bar__fill" style="width:${fillPct}%"></div>
+        </div>
+      </div>
+      <div class="stat-grid">
+        ${statBox('Market Cap',         Fmt.compact(coin.market_cap))}
+        ${statBox('24h Volume',         Fmt.compact(coin.total_volume))}
+        ${statBox('Circulating Supply', `${(coin.circulating_supply ?? 0).toLocaleString('en-US',{maximumFractionDigits:0})} ${coin.symbol.toUpperCase()}`)}
+        ${statBox('All-Time High',      Fmt.price(coin.ath))}
+        ${statBox('ATH Change',         Fmt.pct(coin.ath_change_percentage ?? 0), isPos ? 'text--pos' : 'text--neg')}
+        ${statBox('MCap Rank',          `#${coin.market_cap_rank}`)}
+      </div>`;
+  }
+
+  function skeletons(count = 8) {
+    return Array.from({ length: count }, () => `
+      <div class="skeleton-row">
+        <div class="skeleton" style="width:36px;height:36px;border-radius:50%;flex-shrink:0"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+          <div class="skeleton" style="width:110px;height:13px"></div>
+          <div class="skeleton" style="width:60px;height:10px"></div>
+        </div>
+        <div class="skeleton" style="width:80px;height:13px;margin-left:auto"></div>
+      </div>`
+    ).join('');
+  }
+
+  function empty(icon, line1, line2 = '') {
+    return `<div class="empty" role="status">
+      <div class="empty__icon" aria-hidden="true">${icon}</div>
+      <div>${line1}</div>
+      ${line2 ? `<div style="margin-top:6px;font-size:.8rem;opacity:.7">${line2}</div>` : ''}
+    </div>`;
+  }
+
+  return { coinRow, coinModal, skeletons, empty };
+})();
+
+/* ═══════════════════════════════════════════
+   8. UI  — all DOM mutations live here
+═══════════════════════════════════════════ */
+const UI = (() => {
+
+  function showError(msg) {
+    DOM.errorMsg.textContent = msg;
+    DOM.errorBanner.classList.add('error-banner--visible');
+  }
+  function hideError() {
+    DOM.errorBanner.classList.remove('error-banner--visible');
+  }
+
+  function applyTheme() {
+    document.body.classList.toggle('light', !state.darkMode);
+    DOM.themeBtn.textContent = state.darkMode ? '🌙' : '☀️';
+    Storage.setString(CONFIG.LS_THEME, state.darkMode ? 'dark' : 'light');
+  }
+
+  function setRefreshing(on) {
+    DOM.refreshBtn.classList.toggle('btn--spin', on);
+    DOM.refreshBtn.disabled = on;
+  }
+
+  function openModal(coin) {
+    DOM.modalContent.innerHTML = Render.coinModal(coin);
+    DOM.modalOverlay.classList.add('modal-overlay--open');
+    document.body.style.overflow = 'hidden';
+    DOM.modalClose.focus();
+  }
+  function closeModal() {
+    DOM.modalOverlay.classList.remove('modal-overlay--open');
+    document.body.style.overflow = '';
+  }
+
+  function updateStatus() {
+    DOM.totalAssets.textContent = `${state.coins.length} assets tracked`;
+    if (state.lastUpdated) {
+      DOM.lastUpdated.textContent = `Updated: ${Fmt.time(state.lastUpdated)}`;
+    }
+  }
+
+  function renderGrid() {
+    if (state.loading && state.coins.length === 0) {
+      DOM.assetGrid.innerHTML = Render.skeletons();
+      return;
+    }
+
+    const visible = getFilteredCoins();
+
+    if (visible.length === 0) {
+      DOM.assetGrid.innerHTML = state.tab === 'watchlist'
+        ? Render.empty('★', 'Your watchlist is empty.', 'Star assets to add them here.')
+        : Render.empty('⌕', 'No assets match your search.');
+      return;
+    }
+
+    DOM.assetGrid.innerHTML = visible.map((c, i) => Render.coinRow(c, i, state.watchlist)).join('');
+    updateStatus();
+  }
+
+  return { showError, hideError, applyTheme, setRefreshing, openModal, closeModal, renderGrid };
+})();
+
+/* ═══════════════════════════════════════════
+   9. SELECTORS  — derived/computed state
+═══════════════════════════════════════════ */
+function getFilteredCoins() {
+  let list = state.tab === 'watchlist'
+    ? state.coins.filter(c => state.watchlist.has(c.id))
+    : state.coins;
+
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    list = list.filter(c => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q));
+  }
+  return list;
+}
+
+/* ═══════════════════════════════════════════
+   10. DATA LAYER  — async fetch + state mutations
+═══════════════════════════════════════════ */
+async function loadData({ showSpinner = false } = {}) {
+  if (state.loading) return;        // guard against concurrent fetches
+
+  state.loading = true;
+  state.error   = null;
+
+  if (showSpinner) UI.setRefreshing(true);
+  UI.hideError();
+  UI.renderGrid();                  // show skeletons on first load only
+
+  try {
+    state.coins       = await CoinGeckoService.fetchTopCoins();
+    state.lastUpdated = new Date();
+  } catch (err) {
+    state.error = err.message;
+    UI.showError(err.message);
+  } finally {
+    state.loading = false;
+    UI.setRefreshing(false);
+    UI.renderGrid();
+  }
+}
+
+/* ═══════════════════════════════════════════
+   11. EVENTS  — bound once, use delegation
+═══════════════════════════════════════════ */
+function bindEvents() {
+
+  /* Grid: star toggle + row → modal via a single delegated listener */
+  DOM.assetGrid.addEventListener('click', handleGridClick);
+  DOM.assetGrid.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const row = e.target.closest('[data-id]');
+    if (row) openCoinModal(row.dataset.id);
+  });
+
+  DOM.refreshBtn.addEventListener('click', () => loadData({ showSpinner: true }));
+
+  /* Search — debounced to avoid thrashing on every keystroke */
+  let searchTimer;
+  DOM.searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      state.search = e.target.value.trim();
+      UI.renderGrid();
+    }, CONFIG.SEARCH_DEBOUNCE);
+  });
+
+  /* Tabs */
+  DOM.tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      DOM.tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+      tab.setAttribute('aria-selected', 'true');
+      state.tab = tab.dataset.tab;
+      UI.renderGrid();
+    });
+  });
+
+  /* Theme */
+  DOM.themeBtn.addEventListener('click', () => {
+    state.darkMode = !state.darkMode;
+    UI.applyTheme();
+  });
+
+  /* Modal — close via button, backdrop, or Escape */
+  DOM.modalClose.addEventListener('click', UI.closeModal);
+  DOM.modalOverlay.addEventListener('click', (e) => {
+    if (e.target === DOM.modalOverlay) UI.closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') UI.closeModal();
+  });
+
+  /* Network state */
+  window.addEventListener('offline', () => UI.showError('You are offline. Displaying last known data.'));
+  window.addEventListener('online',  () => { UI.hideError(); loadData({ showSpinner: true }); });
+}
+
+/* ─── helpers wired to event handlers ─── */
+function handleGridClick(e) {
+  const starBtn = e.target.closest('[data-star]');
+  if (starBtn) {
+    e.stopPropagation();
+    toggleWatchlist(starBtn.dataset.star, starBtn);
+    return;
+  }
+  const row = e.target.closest('[data-id]');
+  if (row) openCoinModal(row.dataset.id);
+}
+
+function toggleWatchlist(id, btn) {
+  state.watchlist.has(id) ? state.watchlist.delete(id) : state.watchlist.add(id);
+  Storage.setJSON(CONFIG.LS_WATCHLIST, [...state.watchlist]);
+  const starred = state.watchlist.has(id);
+  btn.setAttribute('aria-pressed', starred);
+  btn.setAttribute('aria-label', `${starred ? 'Remove from' : 'Add to'} watchlist`);
+  if (state.tab === 'watchlist') UI.renderGrid();  // only re-render when it matters
+}
+
+function openCoinModal(id) {
+  const coin = state.coins.find(c => c.id === id);
+  if (coin) UI.openModal(coin);
+}
+
+/* ═══════════════════════════════════════════
+   12. AUTO-REFRESH
+═══════════════════════════════════════════ */
+function startAutoRefresh() {
+  setInterval(() => loadData(), CONFIG.AUTO_REFRESH_MS);
+}
+
+/* ═══════════════════════════════════════════
+   13. BOOTSTRAP
+═══════════════════════════════════════════ */
+(function init() {
+  UI.applyTheme();
+  bindEvents();
+  startAutoRefresh();
+  loadData();
+})();
+</script>
+</body>
+</html>
